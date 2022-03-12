@@ -200,8 +200,8 @@ function createVideoTag(videoAddr)
     return videoTag;
 }
 
-insertTiktokVideo();
-async function insertTiktokVideo() {
+embedVideo();
+async function embedVideo() {
     const getVideoProvider = url => {
         if (url.startsWith('https://vt.tiktok.com') ||
             url.startsWith('https://www.tiktok.com') ||
@@ -210,7 +210,9 @@ async function insertTiktokVideo() {
             return 'tiktok';
         }
 
-        if (url.includes('/videos/') &&
+        if ((url.includes('/videos/') ||
+             url.includes('/video.php') ||
+             url.includes('/watch/')) &&
             (url.startsWith('https://www.facebook.com') || 
              url.startsWith('https://facebook.com') ||
              url.startsWith('http://www.facebook.com') ||
@@ -268,17 +270,21 @@ async function insertTiktokVideo() {
             var responseDoc = parser.parseFromString(response.responseText, "text/html");
 
             var metaTags = responseDoc.head.getElementsByTagName('meta')
-            Array.from(metaTags).forEach(metaTag => {
-                if (metaTag.hasAttribute('property') &&
-                    metaTag.getAttribute('property') === 'og:video')
+
+            let videoTag = null;
+
+            Array.from(metaTags).every(metaTag => {
+                    if (metaTag.hasAttribute('property') &&
+                        metaTag.getAttribute('property') === 'og:video')
                     {
-                        var videoAddr = metaTag.getAttribute('content');                            
-                        var videoTag = createVideoTag(videoAddr);
-                        return Promise.resolve(videoTag);
+                            var videoAddr = metaTag.getAttribute('content');                            
+                            videoTag = createVideoTag(videoAddr);
+                            return false;
                     }
+                    return true;
                 }
             );
-            return Promise.resolve(null);
+            return Promise.resolve(videoTag);
         });
     }
 
