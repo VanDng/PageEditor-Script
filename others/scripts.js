@@ -33,7 +33,7 @@ const CalculateTotalStoryPoint = () => {
     rows.forEach(row => {
         row.childNodes.forEach(column => {
             if (column.getAttribute('class') === StoryPointClass) {
-                const point = parseInt(column.innerText);
+                const point = parseFloat(column.innerText);
                 totalStoryPoint += isNaN(point) ? 0 : point;
             }
         });
@@ -75,10 +75,15 @@ const ShowPockerPoints = () => {
 
     const voteGroup = document.querySelector('tbody[role="rowgroup"]');
 
-    if (voteGroup == null)
+    if (voteGroup === null)
         return;
 
     const votes = voteGroup.childNodes;
+
+    let highestPoint = {
+        nodes: [],
+        point: -1
+    }
 
     votes.forEach(vote => {
         if (vote.nodeName === '#comment')
@@ -88,13 +93,32 @@ const ShowPockerPoints = () => {
             return;
 
         const paticipantNode = vote.querySelector('td[class*=mat-column-displayName]');
-        const pointNode = vote.querySelector('div[class*=flip-card-back]').querySelectorAll(':scope > span');
+        const pointNode = vote.querySelector('div[class*=flip-card-back]').querySelectorAll(':scope > span')[0];
 
-        const pointRaw = parseInt(pointNode.innerText);
+        const pointRaw = parseFloat(pointNode.innerText);
         const point = isNaN(pointRaw) ? '-' : pointRaw;
+
         paticipantNode.innerText = paticipantNode.innerText + ' (' + point + ')';
 
+        console.log(pointRaw);
+        console.log(point);
+
+        if (point !== '-') {
+            if (highestPoint.point < point) {
+                highestPoint.nodes = [];
+                highestPoint.point = point;
+            }
+
+            if (highestPoint.point == point) {
+                highestPoint.nodes.push(vote);
+            }
+        }
+
         vote.setAttribute(PockerMagic, '');
+    });
+
+    highestPoint.nodes.forEach(vote => {
+        vote.style.fontWeight = 600;
     });
 }
 
